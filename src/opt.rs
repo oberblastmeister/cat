@@ -49,3 +49,16 @@ pub struct Opt {
     #[structopt(parse(from_os_str))]
     pub files: Vec<PathBuf>,
 }
+
+impl Opt {
+    pub fn should_use_fast_print(&self) -> bool {
+        !(self.number
+            || self.show_ends
+            || self.show_tabs
+            || self.show_nonprinting
+            || self.show_ends_and_nonprinting
+            || self.number_nonblank
+            || self.show_all
+            || self.squeeze_blank)
+    }
+}

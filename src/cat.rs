@@ -1,12 +1,13 @@
 use std::fs::File;
 use std::io::{self, BufRead, BufReader, Read, Write};
-use std::io::{stdin, stdout, StdinLock, StdoutLock};
-use std::path::{Path, PathBuf};
+use std::io::{StdoutLock, StdinLock};
+use std::path::Path;
 
 use anyhow::{Context, Result};
 
 use super::Opt;
 
+/// quickly prints the contents of a file
 pub fn fast_print<P: AsRef<Path>>(path: P, handle: &mut StdoutLock) -> Result<()> {
     let mut f =
         File::open(&path).context(format!("`{}` is not a file", path.as_ref().display()))?;
@@ -15,6 +16,8 @@ pub fn fast_print<P: AsRef<Path>>(path: P, handle: &mut StdoutLock) -> Result<()
     Ok(())
 }
 
+/// prints the content of a file and inserts different strings
+/// depending on command line options
 pub fn print_insert<P: AsRef<Path>>(
     path: P,
     handle: &mut StdoutLock,
@@ -77,19 +80,9 @@ fn add_to_string(
     }
 }
 
-// pub fn echo(stdin_handle: &mut StdinLock, stdout_handle: &mut StdoutLock) -> Result<()> {
-//     let mut buf = String::new();
-//     loop {
-//         stdin_handle
-//             .read_line(&mut buf)
-//             .context("Failed to read a line from stdin")?;
-//         stdout_handle
-//             .write_all(buf.as_bytes())
-//             .context("Failed to write to stdout")?;
-//         buf.clear();
-//     }
-// }
-
+/// get input from stdin and the echo it back to stdout
+/// it will add different strings to the output based on
+/// command line options
 pub fn echo(
     stdin_handle: &mut StdinLock,
     stdout_handle: &mut StdoutLock,
