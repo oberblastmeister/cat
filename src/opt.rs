@@ -61,4 +61,8 @@ impl Opt {
             || self.show_all
             || self.squeeze_blank)
     }
+
+    pub fn is_number_option(&self) -> bool {
+        self.number || self.number_nonblank
+    }
 }
