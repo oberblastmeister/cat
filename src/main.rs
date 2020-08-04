@@ -1,5 +1,4 @@
 mod cat;
-mod error;
 mod exit_codes;
 mod opt;
 mod state;
@@ -14,7 +13,6 @@ use anyhow::{anyhow, Result};
 use structopt::StructOpt;
 
 use cat::{fast_print, print_insert, echo};
-use error::print_err;
 use exit_codes::ExitCode;
 use opt::Opt;
 
@@ -32,9 +30,7 @@ fn try_main() -> Result<()> {
     })
     .map_err(|e| anyhow!("{}\n\nError setting ctrl-c handler.", e.to_string()))?;
 
-    let opt = Opt::from_args();
-    dbg!(&opt);
-    
+    let opt = Opt::new_with_equivalent_options();
 
     let stdout = stdout();
     let stdin = stdin();
@@ -62,7 +58,7 @@ fn main() {
     match try_main() {
         Ok(()) => process::exit(ExitCode::Success.into()),
         Err(e) => {
-            print_err(&format!("{}", e));
+            eprintln!("[cat error]: {}", e);
             process::exit(ExitCode::GeneralError.into())
         }
     }

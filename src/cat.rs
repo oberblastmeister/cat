@@ -29,20 +29,14 @@ pub fn print_insert<P: AsRef<Path>>(
     opt: &Opt,
     wants_to_quit: &Arc<AtomicBool>,
 ) -> Result<()> {
-    let mut buf = String::new();
-    let mut insert_buf = if opt.is_number_option() {
-        Some(String::new())
-    } else {
-        None
-    };
-    let mut supress = false;
+    let mut state = State::new(opt);
 
     let mut f = BufReader::new(
         File::open(&path).context(format!("`{}` is not a file", path.as_ref().display()))?,
     );
     let mut line = 1;
     while let Some(_) = f
-        .read_line(&mut buf)
+        .read_line(&mut state.buffer)
         .map(|u| if u == 0 { None } else { Some(u) })
         .context(format!(
             "Could not read line {} from {}",
@@ -50,12 +44,12 @@ pub fn print_insert<P: AsRef<Path>>(
             path.as_ref().display()
         ))?
     {
-        change_string(&mut buf, &mut insert_buf, &mut supress, line, &opt);
-        handle.write_all(buf.as_bytes())?;
+        change_string(&mut state.buffer, &mut state.insert_buffer, &mut state.suppress, line, &opt);
+        handle.write_all(state.buffer.as_bytes())?;
 
-        // must be before the buffer is cleared
-        line = calculate_next_line(&buf, &opt, line);
-        buf.clear();
+        // must be before the state.buffer is cleared
+        line = calculate_next_line(&state.buffer, &opt, line);
+        state.buffer.clear();
     }
 
     Ok(())
@@ -160,5 +154,76 @@ fn calculate_next_line(s: &String, opt: &Opt, current_line: u32) -> u32 {
         current_line + 1
     } else {
         current_line
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    impl Opt {
+        fn new_number_options(number: bool, number_nonblank: bool) -> Self {
+            Opt {
+                show_all: false,
+                number_nonblank,
+                show_ends_and_nonprinting: false,
+                show_ends: false,
+                number,
+                squeeze_blank: false,
+                show_tabs: false,
+                ignored: false,
+                show_nonprinting: false,
+                files: Vec::new(),
+            }
+        }
+    }
+
+    #[test]
+    fn calculate_next_line_test() {
+        let opt = Opt::new_number_options(true, false);
+        let s = String::from("wow very intersting");
+        assert_eq!(calculate_next_line(&s, &opt, 0), 1);
+    }
+
+    #[test]
+    fn calculate_next_line_with_empty_string_test() {
+        let opt = Opt::new_number_options(true, false);
+        let s = String::from("");
+        assert_eq!(calculate_next_line(&s, &opt, 0), 1);
+    }
+
+    #[test]
+    fn calculate_next_line_with_newline_test() {
+        let opt = Opt::new_number_options(true, false);
+        let s = String::from("\n");
+        assert_eq!(calculate_next_line(&s, &opt, 0), 1);
+    }
+
+    #[test]
+    fn calculate_next_line_number_nonempty_test() {
+        let opt = Opt::new_number_options(false, true);
+        let s = String::from("hello dude so intersting");
+        assert_eq!(calculate_next_line(&s, &opt, 0), 1);
+    }
+
+    #[test]
+    fn calculate_next_line_number_nonempty_with_empty_string_test() {
+        let opt = Opt::new_number_options(false, true);
+        let s = String::from("");
+        assert_eq!(calculate_next_line(&s, &opt, 0), 0);
+    }
+
+    #[test]
+    fn calculate_next_line_number_nonempty_overrides_regular_test() {
+        let opt = Opt::new_number_options(true, true);
+        let s = String::from("");
+        assert_eq!(calculate_next_line(&s, &opt, 0), 0);
+    }
+
+    #[test]
+    fn calculate_next_line_number_nonempty_overrides_fullstring_test() {
+        let opt = Opt::new_number_options(true, true);
+        let s = String::from("wow this is just so intersting");
+        assert_eq!(calculate_next_line(&s, &opt, 0), 1);
     }
 }

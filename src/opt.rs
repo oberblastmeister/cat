@@ -51,6 +51,13 @@ pub struct Opt {
 }
 
 impl Opt {
+    pub fn new_with_equivalent_options() -> Self {
+        let mut opt = Opt::from_args();
+        opt.show_all_equivalent();
+        opt.show_ends_and_nonprinting_equivalent();
+        opt
+    }
+
     pub fn should_use_fast_print(&self) -> bool {
         !(self.number
             || self.show_ends
@@ -64,5 +71,20 @@ impl Opt {
 
     pub fn is_number_option(&self) -> bool {
         self.number || self.number_nonblank
+    }
+
+    fn show_all_equivalent(&mut self) {
+        if self.show_all {
+            self.show_nonprinting = true;
+            self.show_ends = true;
+            self.show_tabs = true;
+        }
+    }
+    
+    fn show_ends_and_nonprinting_equivalent(&mut self) {
+        if self.show_ends_and_nonprinting {
+            self.show_nonprinting = true;
+            self.show_ends = true;
+        }
     }
 }

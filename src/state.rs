@@ -4,6 +4,7 @@ pub struct State {
     pub buffer: String,
     pub insert_buffer: Option<String>,
     pub suppress: bool,
+    pub line: u32,
 }
 
 impl State {
@@ -17,6 +18,7 @@ impl State {
             buffer: String::new(),
             insert_buffer,
             suppress: false,
+            line: 1,
         }
     }
 }
